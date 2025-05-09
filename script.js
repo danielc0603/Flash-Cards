@@ -211,3 +211,33 @@ function renderFlashcards() {
   document.getElementById("reviewing-bar").style.width = `${(reviewing / total) * 100}%`;
   document.getElementById("unseen-bar").style.width = `${((cards.length - mastered - reviewing) / total) * 100}%`;
 }
+
+
+document.getElementById("csv-upload").addEventListener("change", function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    const lines = event.target.result.split('\n');
+    const chapter = chapterSelect.value;
+    let addedCount = 0;
+
+    lines.forEach(line => {
+      const [front, back] = line.split(',').map(s => s?.trim());
+      if (front && back) {
+        flashcards.push({ front, back, chapter, status: "unseen" });
+        addedCount++;
+      }
+    });
+
+    if (addedCount > 0) {
+      localStorage.setItem("flashcards_v2", JSON.stringify(flashcards));
+      renderFlashcards();
+      alert(`Imported ${addedCount} flashcards into "${chapter}"`);
+    } else {
+      alert("No flashcards were imported. Please check your CSV format.");
+    }
+  };
+  reader.readAsText(file);
+});
