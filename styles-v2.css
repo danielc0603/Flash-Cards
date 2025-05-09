@@ -1,0 +1,130 @@
+
+:root {
+  --bg-light: #f0f2f5;
+  --bg-dark: #1e1e1e;
+  --card-light: #ffffff;
+  --card-dark: #2a2a2a;
+  --text-light: #333;
+  --text-dark: #f0f0f0;
+  --accent: #2e86de;
+  --hover: #1b4f72;
+  --mastered: #27ae60;
+  --reviewing: #f1c40f;
+  --unseen: #bdc3c7;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: var(--bg-light);
+  color: var(--text-light);
+  transition: background 0.3s, color 0.3s;
+}
+
+body.dark {
+  background: var(--bg-dark);
+  color: var(--text-dark);
+}
+
+.container {
+  max-width: 800px;
+  margin: auto;
+  padding: 30px 20px;
+  background: var(--card-light);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-top: 40px;
+  transition: background 0.3s;
+}
+
+body.dark .container {
+  background: var(--card-dark);
+}
+
+h1 {
+  text-align: center;
+  color: inherit;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+input, select {
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+}
+
+button {
+  padding: 12px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: var(--accent);
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--hover);
+}
+
+#theme-toggle {
+  margin: 0 auto 20px auto;
+  display: block;
+}
+
+.card {
+  background: var(--unseen);
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 12px;
+  font-size: 18px;
+  text-align: center;
+  transition: transform 0.5s, background 0.3s;
+  cursor: pointer;
+  perspective: 1000px;
+}
+
+.card.mastered {
+  background: var(--mastered);
+}
+.card.reviewing {
+  background: var(--reviewing);
+}
+
+#stats {
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.progress-bar {
+  background: #ccc;
+  border-radius: 10px;
+  overflow: hidden;
+  height: 10px;
+  margin: 5px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.progress-mastered {
+  background: var(--mastered);
+}
+.progress-reviewing {
+  background: var(--reviewing);
+}
+.progress-unseen {
+  background: var(--unseen);
+}
