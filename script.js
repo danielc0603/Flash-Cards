@@ -337,3 +337,47 @@ quizBtn.onclick = () => {
 
   nextCard();
 };
+
+
+
+// Firebase configuration
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBYv_Q4_eRP2_yNo0jd2pq_CSeDxsbUZfE",
+  authDomain: "flashcardapp-cc193.firebaseapp.com",
+  projectId: "flashcardapp-cc193",
+  storageBucket: "flashcardapp-cc193.appspot.com",
+  messagingSenderId: "203925836994",
+  appId: "1:203925836994:web:5998d5765848c98e2dd75b"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Helper: Save all cards to Firebase
+async function syncFlashcardsToFirebase() {
+  const userCards = flashcards || [];
+  for (let i = 0; i < userCards.length; i++) {
+    const card = userCards[i];
+    const id = `${card.chapter}-${card.front}`.replace(/[^a-zA-Z0-9-_]/g, "_");
+    await setDoc(doc(db, "flashcards", id), card);
+  }
+  console.log("All flashcards synced to Firebase.");
+}
+
+// Helper: Load cards from Firebase
+async function loadFlashcardsFromFirebase() {
+  const snapshot = await getDocs(collection(db, "flashcards"));
+  const loaded = [];
+  snapshot.forEach(doc => loaded.push(doc.data()));
+  flashcards = loaded;
+  localStorage.setItem("flashcards_v2", JSON.stringify(flashcards));
+  console.log("Flashcards loaded from Firebase.");
+  renderFlashcards();
+}
+
+// Load on page start
+loadFlashcardsFromFirebase();
