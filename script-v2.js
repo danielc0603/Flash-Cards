@@ -1,4 +1,3 @@
-
 // Firebase config and initialization
 const firebaseConfig = {
   apiKey: "AIzaSyBYv_Q4_eRP2_yNo0jd2pq_CSeDxsbUZfE",
@@ -30,155 +29,113 @@ const chapters = [
 const chapterSelect = document.getElementById("chapter");
 chapters.forEach(ch => {
   const opt = document.createElement("option");
-  opt.value = ch;
-  opt.textContent = ch;
+  opt.value = ch; opt.textContent = ch;
   chapterSelect.appendChild(opt);
 });
 
-document.getElementById("darkModeToggle").addEventListener("click", () => {
-  document.body.classList.toggle("dark");
-});
+document.getElementById("darkModeToggle").onclick = () => document.body.classList.toggle("dark");
 
-async function syncToFirebase(card) {
-  const id = `${card.chapter}-${card.front}`.replace(/[^a-zA-Z0-9-_]/g, "_");
-  await db.collection("flashcards").doc(id).set(card);
+// Firebase helpers
+const docId = (card)=> `${card.chapter}-${card.front}`.replace(/[^a-zA-Z0-9-_]/g,"_");
+const saveCard = (card)=> db.collection("flashcards").doc(docId(card)).set(card);
+
+async function loadCards(){
+  const snap = await db.collection("flashcards").get();
+  flashcards = snap.docs.map(d=>d.data());
+  render();
 }
 
-async function loadFromFirebase() {
-  const snapshot = await db.collection("flashcards").get();
-  flashcards = snapshot.docs.map(doc => doc.data());
+function updateStats(){
+  const cur = chapterSelect.value;
+  const cards = flashcards.filter(c=>c.chapter===cur);
+  const total = cards.length||1;
+  const mastered = cards.filter(c=>c.status==="mastered").length;
+  const reviewing = cards.filter(c=>c.status==="reviewing").length;
+  const unseen = total-mastered-reviewing;
+  document.getElementById("mastered-bar").style.width = `${mastered/total*100}%`;
+  document.getElementById("reviewing-bar").style.width = `${reviewing/total*100}%`;
+  document.getElementById("unseen-bar").style.width = `${unseen/total*100}%`;
 }
 
-function updateStats() {
-  const current = chapterSelect.value;
-  const chapterCards = flashcards.filter(c => c.chapter === current);
-  const total = chapterCards.length;
-  const mastered = chapterCards.filter(c => c.status === "mastered").length;
-  const reviewing = chapterCards.filter(c => c.status === "reviewing").length;
-  const unseen = total - mastered - reviewing;
-
-  document.getElementById("mastered-bar").style.width = `${(mastered / total) * 100 || 0}%`;
-  document.getElementById("reviewing-bar").style.width = `${(reviewing / total) * 100 || 0}%`;
-  document.getElementById("unseen-bar").style.width = `${(unseen / total) * 100 || 0}%`;
-}
-
-function renderFlashcards() {
+function render(){
+  const cur = chapterSelect.value;
   const container = document.getElementById("flashcards-container");
-  container.innerHTML = "";
-  const current = chapterSelect.value;
-  flashcards.filter(card => card.chapter === current).forEach((card, i) => {
-    const div = document.createElement("div");
-    div.className = "card";
-    div.textContent = card.front;
-    div.onclick = () => {
-      div.textContent = div.textContent === card.front ? card.back : card.front;
-    };
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.classList.add("card-checkbox");
-    checkbox.dataset.index = i;
-    div.prepend(checkbox);
+  container.innerHTML="";
+  flashcards.filter(c=>c.chapter===cur).forEach((card,i)=>{
+    const div=document.createElement("div");
+    div.className="card"; div.textContent=card.front;
+    div.onclick=()=>{div.textContent = div.textContent===card.front?card.back:card.front};
+    const cb=document.createElement("input");
+    cb.type="checkbox"; cb.className="card-checkbox"; cb.dataset.index=i;
+    div.prepend(cb);
     container.appendChild(div);
   });
   updateStats();
 }
 
-document.getElementById("flashcard-form").addEventListener("submit", async function (e) {
+document.getElementById("flashcard-form").onsubmit = async e=>{
   e.preventDefault();
   const front = document.getElementById("front").value.trim();
   const back = document.getElementById("back").value.trim();
   const chapter = chapterSelect.value;
-  const card = { front, back, chapter, status: "unseen" };
-  await syncToFirebase(card);
+  const card={front,back,chapter,status:"unseen"};
+  await saveCard(card);
   flashcards.push(card);
-  renderFlashcards();
+  render();
   e.target.reset();
-});
+};
 
-document.getElementById("csv-upload").addEventListener("change", function (e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async function (event) {
-    const lines = event.target.result.split("\n");
-    const chapter = chapterSelect.value;
-    for (let line of lines) {
-      const [front, back] = line.split(",");
-      if (front && back) {
-        const card = { front: front.trim(), back: back.trim(), chapter, status: "unseen" };
-        await syncToFirebase(card);
-        flashcards.push(card);
+document.getElementById("csv-upload").addEventListener("change",e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    const lines=ev.target.result.split('\n');
+    const chapter=chapterSelect.value;
+    for(const line of lines){
+      const [f,b]=line.split(',');
+      if(f&&b){
+        const card={front:f.trim(),back:b.trim(),chapter,status:"unseen"};
+        await saveCard(card); flashcards.push(card);
       }
-    }
-    renderFlashcards();
-  };
-  reader.readAsText(file);
+    } render();
+  }; reader.readAsText(file);
 });
 
-document.getElementById("select-all").addEventListener("click", () => {
-  document.querySelectorAll(".card-checkbox").forEach(cb => cb.checked = true);
-});
+document.getElementById("select-all").onclick=()=>document.querySelectorAll(".card-checkbox").forEach(cb=>cb.checked=true);
 
-document.getElementById("delete-selected").addEventListener("click", async () => {
-  if (!confirm("Are you sure you want to delete selected cards?")) return;
-  const checkboxes = document.querySelectorAll(".card-checkbox:checked");
-  for (let cb of checkboxes) {
-    const index = parseInt(cb.dataset.index);
-    const card = flashcards[index];
-    const id = `${card.chapter}-${card.front}`.replace(/[^a-zA-Z0-9-_]/g, "_");
-    await db.collection("flashcards").doc(id).delete();
+document.getElementById("delete-selected").onclick=async ()=>{
+  if(!confirm("Delete selected?")) return;
+  const toDelete=[...document.querySelectorAll(".card-checkbox:checked")];
+  for(const cb of toDelete){
+    const idx=parseInt(cb.dataset.index);
+    const card=flashcards[idx];
+    await db.collection("flashcards").doc(docId(card)).delete();
   }
-  flashcards = flashcards.filter((card, i) => {
-    return !checkboxes.some(cb => parseInt(cb.dataset.index) === i);
-  });
-  renderFlashcards();
-});
+  flashcards=flashcards.filter((_,i)=>!toDelete.some(cb=>parseInt(cb.dataset.index)===i));
+  render();
+};
 
-document.getElementById("start-quiz").addEventListener("click", () => {
-  const current = chapterSelect.value;
-  const cards = flashcards.filter(c => c.chapter === current);
-  if (!cards.length) return alert("No cards in this chapter.");
-  let i = 0;
-  const ask = () => {
-    if (i >= cards.length) return alert("Quiz finished.");
-    const card = cards[i];
-    prompt(`Q: ${card.front}\n(Press OK to see answer)`);
-    const modal = document.createElement("div");
-    modal.className = "quiz-modal";
-    modal.innerHTML = `<p>Answer: ${card.back}</p><p>Did you get it right?</p>`;
-    const yesBtn = document.createElement("button");
-    yesBtn.textContent = "✅ Yes - Mastered";
-    yesBtn.onclick = async () => {
-      card.status = "mastered";
-      await syncToFirebase(card);
-      modal.remove();
-      i++;
-      ask();
-    };
-    const noBtn = document.createElement("button");
-    noBtn.textContent = "❌ No - Reviewing";
-    noBtn.onclick = async () => {
-      card.status = "reviewing";
-      await syncToFirebase(card);
-      modal.remove();
-      i++;
-      ask();
-    };
-    modal.appendChild(yesBtn);
-    modal.appendChild(noBtn);
-    document.body.appendChild(modal);
-  };
-  ask();
-});
+document.getElementById("start-quiz").onclick=()=>{
+  const cards=flashcards.filter(c=>c.chapter===chapterSelect.value);
+  if(!cards.length) return alert("No cards.");
+  let i=0;
+  const ask=()=>{ if(i>=cards.length){render(); return alert("Quiz done.");}
+    const card=cards[i];
+    prompt(`Q: ${card.front}\n(OK for answer)`);
+    const modal=document.createElement("div");
+    modal.className="quiz-modal";
+    modal.innerHTML=`<p>Answer: ${card.back}</p><p>Did you get it right?</p>`;
+    const yes=document.createElement("button"); yes.textContent="✅ Mastered";
+    const no=document.createElement("button"); no.textContent="❌ Reviewing";
+    yes.onclick=async()=>{card.status="mastered"; await saveCard(card); modal.remove(); i++; ask();};
+    no.onclick=async()=>{card.status="reviewing"; await saveCard(card); modal.remove(); i++; ask();};
+    modal.appendChild(yes); modal.appendChild(no); document.body.appendChild(modal);
+  }; ask();
+};
 
-chapterSelect.addEventListener("change", () => {
-  localStorage.setItem("selected_chapter", chapterSelect.value);
-  renderFlashcards();
-});
+chapterSelect.onchange=()=>{localStorage.setItem("sel_ch",chapterSelect.value); render();};
 
-window.addEventListener("DOMContentLoaded", async () => {
-  const saved = localStorage.getItem("selected_chapter");
-  if (saved) chapterSelect.value = saved;
-  await loadFromFirebase();
-  renderFlashcards();
+window.addEventListener("DOMContentLoaded",async ()=>{
+  const saved=localStorage.getItem("sel_ch"); if(saved) chapterSelect.value=saved;
+  await loadCards();
 });
