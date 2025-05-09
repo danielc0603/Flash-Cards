@@ -88,17 +88,27 @@ document.getElementById("flashcard-form").onsubmit = async e=>{
 document.getElementById("csv-upload").addEventListener("change",e=>{
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=async ev=>{
-    const lines=ev.target.result.split('\n');
-    const chapter=chapterSelect.value;
-    for(const line of lines){
-      const [f,b]=line.split(',');
-      if(f&&b){
-        const card={front:f.trim(),back:b.trim(),chapter,status:"unseen"};
-        await saveCard(card); flashcards.push(card);
-      }
-    } render();
-  }; reader.readAsText(file);
+  reader.onload = async (ev) => {
+  const raw = ev.target.result.replace(//g, '');
+  const lines = raw.split('
+').filter(Boolean);
+  const chapter = chapterSelect.value;
+  let added = 0;
+
+  for (const line of lines) {
+    const [front, back] = line.split(',').map(t => t?.trim());
+    if (front && back) {
+      const card = { front, back, chapter, status: 'unseen' };
+      await saveToFirebase(card);
+      flashcards.push(card);
+      added++;
+    }
+  }
+  render();
+  alert(`${added} flashcards imported into ${chapter}`);
+  e.target.value = '';
+};
+  reader.readAsText(file);
 });
 
 document.getElementById("select-all").onclick=()=>document.querySelectorAll(".card-checkbox").forEach(cb=>cb.checked=true);
