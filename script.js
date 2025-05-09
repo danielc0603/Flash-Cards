@@ -81,6 +81,8 @@ chapterSelect.onchange = () => {
 };
 
 quizBtn.onclick = () => {
+  if (document.getElementById('exit-quiz')) return;
+
   const chapter = chapterSelect.value;
   const cards = shuffle(getCardsByChapter(chapter));
   if (cards.length === 0) {
@@ -90,8 +92,10 @@ quizBtn.onclick = () => {
 
   let index = 0;
   let score = 0;
+  let stopQuiz = false;
 
   function nextCard() {
+    if (stopQuiz) return;
     if (index >= cards.length) {
       alert(`Quiz finished! Score: ${score}/${cards.length}`);
       renderFlashcards();
@@ -241,3 +245,95 @@ document.getElementById("csv-upload").addEventListener("change", function (e) {
   };
   reader.readAsText(file);
 });
+
+
+// Create a modal-style quiz UI
+function showQuizCard(card, onResult) {
+  const modal = document.createElement('div');
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.width = '100vw';
+  modal.style.height = '100vh';
+  modal.style.background = 'rgba(0,0,0,0.6)';
+  modal.style.display = 'flex';
+  modal.style.alignItems = 'center';
+  modal.style.justifyContent = 'center';
+  modal.style.zIndex = '1000';
+
+  const box = document.createElement('div');
+  box.style.background = 'white';
+  box.style.padding = '20px';
+  box.style.borderRadius = '12px';
+  box.style.maxWidth = '500px';
+  box.style.boxShadow = '0 0 12px rgba(0,0,0,0.3)';
+  box.innerHTML = `<p><strong>Answer:</strong> ${card.back}</p><p>Did you get it right?</p>`;
+
+  const yesBtn = document.createElement('button');
+  yesBtn.textContent = '✅ Yes – Mastered';
+  yesBtn.style.marginRight = '10px';
+  yesBtn.onclick = () => {
+    onResult(true);
+    document.body.removeChild(modal);
+  };
+
+  const noBtn = document.createElement('button');
+  noBtn.textContent = '❌ No – Reviewing';
+  noBtn.onclick = () => {
+    onResult(false);
+    document.body.removeChild(modal);
+  };
+
+  box.appendChild(yesBtn);
+  box.appendChild(noBtn);
+  modal.appendChild(box);
+    const exitBtn = document.createElement('button');
+  exitBtn.textContent = '🚪 Exit Quiz';
+  exitBtn.id = 'exit-quiz';
+  exitBtn.style.marginTop = '10px';
+  exitBtn.onclick = () => {
+    stopQuiz = true;
+    document.body.removeChild(modal);
+    alert(`Quiz exited early. Score: ${score}/${index}`);
+    renderFlashcards();
+  };
+  box.appendChild(document.createElement('br'));
+  box.appendChild(exitBtn);
+  document.body.appendChild(modal);
+}
+
+quizBtn.onclick = () => {
+  if (document.getElementById('exit-quiz')) return;
+
+  const chapter = chapterSelect.value;
+  const cards = shuffle(getCardsByChapter(chapter));
+  if (cards.length === 0) {
+    alert("No cards available for this chapter.");
+    return;
+  }
+
+  let index = 0;
+  let score = 0;
+  let stopQuiz = false;
+
+  function nextCard() {
+    if (stopQuiz) return;
+    if (index >= cards.length) {
+      alert(`Quiz finished! Score: ${score}/${cards.length}`);
+      renderFlashcards();
+      return;
+    }
+
+    const card = cards[index];
+    const userAnswer = prompt(`Q: ${card.front}\n\n(Press OK to see answer)`);
+    showQuizCard(card, (correct) => {
+      card.status = correct ? "mastered" : "reviewing";
+      if (correct) score++;
+      localStorage.setItem("flashcards_v2", JSON.stringify(flashcards));
+      index++;
+      nextCard();
+    });
+  }
+
+  nextCard();
+};
