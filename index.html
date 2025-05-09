@@ -1,21 +1,33 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flashcards</title>
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
-    }
-  </script>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Biology Flashcards</title>
-  <link rel="stylesheet" href="styles-v2.css" />
+  <link rel="stylesheet" href="styles-v2.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Flashcards</h1>
+    <div id="loading">Loading...</div>
+    <div id="app" style="display:none;">
+      <select id="chapter"></select>
+      <form id="flashcard-form">
+        <input type="text" id="front" placeholder="Front" required>
+        <input type="text" id="back" placeholder="Back" required>
+        <button type="submit">Add</button>
+      </form>
+      <button id="start-quiz">Start Quiz</button>
+      <div id="flashcards-container"></div>
+    </div>
+  </div>
 
-  <!-- Firebase v9 compatibility mode (works on all platforms) -->
+  <!-- Firebase and core logic -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
@@ -29,39 +41,48 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    let flashcards = [];
+
+    async function loadCards() {
+      const snap = await db.collection("flashcards").get();
+      flashcards = snap.docs.map(doc => doc.data());
+      document.getElementById("loading").style.display = "none";
+      document.getElementById("app").style.display = "block";
+      render();
+    }
+
+    function render() {
+      const container = document.getElementById("flashcards-container");
+      container.innerHTML = "";
+      flashcards.forEach(card => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.textContent = card.front;
+        div.onclick = () => {
+          div.textContent = div.textContent === card.front ? card.back : card.front;
+        };
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById("flashcard-form").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const front = document.getElementById("front").value.trim();
+      const back = document.getElementById("back").value.trim();
+      const card = { front, back };
+      await db.collection("flashcards").add(card);
+      flashcards.push(card);
+      render();
+      e.target.reset();
+    });
+
+    window.addEventListener("load", () => {
+      loadCards();
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
   </script>
-</head>
-<body>
-  <div class="container">
-    <h1>Biology Flashcards</h1>
-    <button id="theme-toggle">Toggle Dark Mode</button>
-    <form id="flashcard-form">
-      <select id="chapter" required></select>
-      <input type="text" id="front" placeholder="Front text" required />
-      <input type="text" id="back" placeholder="Back text" required />
-      <button type="submit">Add Card</button>
-    </form>
-
-    <div>
-      <h3>📂 Upload Flashcards (.csv)</h3>
-      <input type="file" id="csv-upload" accept=".csv" />
-    </div>
-
-    <div id="stats">
-      <div>Mastered: <div class="progress-bar"><div id="mastered-bar" class="progress-fill progress-mastered" style="width: 0%"></div></div></div>
-      <div>Reviewing: <div class="progress-bar"><div id="reviewing-bar" class="progress-fill progress-reviewing" style="width: 0%"></div></div></div>
-      <div>Unseen: <div class="progress-bar"><div id="unseen-bar" class="progress-fill progress-unseen" style="width: 0%"></div></div></div>
-    </div>
-
-    <button id="start-quiz">Start Quiz</button>
-    
-    <div style="margin-top: 10px;">
-      <button id="select-all" type="button">Select All</button>
-      <button id="delete-selected" type="button">Delete Selected Cards</button>
-    </div>
-    <div id="flashcards-container"></div>
-    
-  </div>
-  <script src="script-v2.js"></script>
 </body>
 </html>
