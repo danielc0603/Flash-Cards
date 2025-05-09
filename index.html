@@ -3,19 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Flashcards</title>
+  <title>Biology Flashcards</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="container">
     <h1>Biology Flashcards</h1>
+    <button id="theme-toggle">Toggle Dark Mode</button>
     <form id="flashcard-form">
       <select id="chapter" required></select>
       <input type="text" id="front" placeholder="Front text" required />
       <input type="text" id="back" placeholder="Back text" required />
       <button type="submit">Add Card</button>
     </form>
-    <div id="stats"></div>
+    <div id="stats">
+      <div>Mastered: <div class="progress-bar"><div id="mastered-bar" class="progress-fill progress-mastered" style="width: 0%"></div></div></div>
+      <div>Reviewing: <div class="progress-bar"><div id="reviewing-bar" class="progress-fill progress-reviewing" style="width: 0%"></div></div></div>
+      <div>Unseen: <div class="progress-bar"><div id="unseen-bar" class="progress-fill progress-unseen" style="width: 0%"></div></div></div>
+    </div>
     <button id="start-quiz">Start Quiz</button>
     <div id="flashcards-container"></div>
   </div>

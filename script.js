@@ -20,6 +20,7 @@ const chapterSelect = document.getElementById('chapter');
 const container = document.getElementById('flashcards-container');
 const statsContainer = document.getElementById('stats');
 const quizBtn = document.getElementById('start-quiz');
+const themeToggle = document.getElementById('theme-toggle');
 
 let flashcards = JSON.parse(localStorage.getItem('flashcards_v2')) || [];
 
@@ -40,28 +41,24 @@ function renderFlashcards() {
   container.innerHTML = '';
   let mastered = 0, reviewing = 0;
 
-  cards.forEach((card, index) => {
+  cards.forEach((card) => {
     const div = document.createElement('div');
     div.className = 'card';
     div.textContent = card.front;
+    div.classList.add(card.status || 'unseen');
     div.onclick = () => {
-      if (div.textContent === card.front) {
-        div.textContent = card.back;
-      } else {
-        div.textContent = card.front;
-      }
+      div.classList.toggle('flipped');
+      div.textContent = div.classList.contains('flipped') ? card.back : card.front;
     };
-    const status = card.status || "unseen";
-    if (status === "mastered") mastered++;
-    if (status === "reviewing") reviewing++;
+    if (card.status === "mastered") mastered++;
+    if (card.status === "reviewing") reviewing++;
     container.appendChild(div);
   });
 
-  statsContainer.innerHTML = `
-    <p>Mastered: ${mastered}</p>
-    <p>Reviewing: ${reviewing}</p>
-    <p>Unseen: ${cards.length - mastered - reviewing}</p>
-  `;
+  const total = cards.length || 1;
+  document.getElementById("mastered-bar").style.width = `${(mastered / total) * 100}%`;
+  document.getElementById("reviewing-bar").style.width = `${(reviewing / total) * 100}%`;
+  document.getElementById("unseen-bar").style.width = `${((cards.length - mastered - reviewing) / total) * 100}%`;
 }
 
 form.onsubmit = (e) => {
@@ -128,5 +125,9 @@ function shuffle(array) {
   }
   return array;
 }
+
+themeToggle.onclick = () => {
+  document.body.classList.toggle('dark');
+};
 
 renderFlashcards();
