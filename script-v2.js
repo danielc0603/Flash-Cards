@@ -36,7 +36,7 @@ chapters.forEach(ch => {
 document.getElementById("darkModeToggle").onclick = () => document.body.classList.toggle("dark");
 
 // Firebase helpers
-const docId = (card)=> `${card.chapter}-${card.front}`.replace(/[^a-zA-Z0-9-_]/g,"_");
+const docId = (card)=> `${card.chapter}-${card.front}`.replace(/[^a-zA-Z0-9_\-]/g,"_");
 const saveCard = (card)=> db.collection("flashcards").doc(docId(card)).set(card);
 
 async function loadCards(){
@@ -89,7 +89,8 @@ document.getElementById("csv-upload").addEventListener("change",e=>{
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
   reader.onload = async (ev) => {
-  const raw = ev.target.result.replace(//g, '');
+  const raw = ev.target.result.replace(/
+/g, '');
   const lines = raw.split('
 ').filter(Boolean);
   const chapter = chapterSelect.value;
