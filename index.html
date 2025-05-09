@@ -16,11 +16,18 @@
       <input type="text" id="back" placeholder="Back text" required />
       <button type="submit">Add Card</button>
     </form>
+
+    <div>
+      <h3>📂 Upload Flashcards (.csv)</h3>
+      <input type="file" id="csv-upload" accept=".csv" />
+    </div>
+
     <div id="stats">
       <div>Mastered: <div class="progress-bar"><div id="mastered-bar" class="progress-fill progress-mastered" style="width: 0%"></div></div></div>
       <div>Reviewing: <div class="progress-bar"><div id="reviewing-bar" class="progress-fill progress-reviewing" style="width: 0%"></div></div></div>
       <div>Unseen: <div class="progress-bar"><div id="unseen-bar" class="progress-fill progress-unseen" style="width: 0%"></div></div></div>
     </div>
+
     <button id="start-quiz">Start Quiz</button>
     <div id="flashcards-container"></div>
   </div>

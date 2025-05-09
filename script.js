@@ -131,3 +131,25 @@ themeToggle.onclick = () => {
 };
 
 renderFlashcards();
+
+
+document.getElementById("csv-upload").addEventListener("change", function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    const lines = event.target.result.split('\n');
+    const chapter = chapterSelect.value;
+    lines.forEach(line => {
+      const [front, back] = line.split(',').map(s => s?.trim());
+      if (front && back) {
+        flashcards.push({ front, back, chapter, status: "unseen" });
+      }
+    });
+    localStorage.setItem("flashcards_v2", JSON.stringify(flashcards));
+    renderFlashcards();
+    alert("Flashcards imported!");
+  };
+  reader.readAsText(file);
+});
