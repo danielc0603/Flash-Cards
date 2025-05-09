@@ -5,84 +5,95 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Flashcards</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="styles-v2.css">
+  <link rel="stylesheet" href="styles-v2.css" />
 </head>
 <body>
   <div class="container">
     <h1>Flashcards</h1>
-    <div id="loading">Loading...</div>
-    <div id="app" style="display:none;">
-      <select id="chapter"></select>
-      <form id="flashcard-form">
-        <input type="text" id="front" placeholder="Front" required>
-        <input type="text" id="back" placeholder="Back" required>
-        <button type="submit">Add</button>
-      </form>
-      <button id="start-quiz">Start Quiz</button>
-      <div id="flashcards-container"></div>
-    </div>
+    <select id="chapter"></select>
+    <form id="flashcard-form">
+      <input type="text" id="front" placeholder="Front" required />
+      <input type="text" id="back" placeholder="Back" required />
+      <button type="submit">Add Card</button>
+    </form>
+    <button id="start-quiz">Start Quiz</button>
+    <div id="flashcards-container"></div>
   </div>
 
-  <!-- Firebase and core logic -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBYv_Q4_eRP2_yNo0jd2pq_CSeDxsbUZfE",
-      authDomain: "flashcardapp-cc193.firebaseapp.com",
-      projectId: "flashcardapp-cc193",
-      storageBucket: "flashcardapp-cc193.appspot.com",
-      messagingSenderId: "203925836994",
-      appId: "1:203925836994:web:5998d5765848c98e2dd75b"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    let flashcards = [];
+    document.addEventListener("DOMContentLoaded", function () {
+      const firebaseConfig = {
+        apiKey: "AIzaSyBYv_Q4_eRP2_yNo0jd2pq_CSeDxsbUZfE",
+        authDomain: "flashcardapp-cc193.firebaseapp.com",
+        projectId: "flashcardapp-cc193",
+        storageBucket: "flashcardapp-cc193.appspot.com",
+        messagingSenderId: "203925836994",
+        appId: "1:203925836994:web:5998d5765848c98e2dd75b"
+      };
 
-    async function loadCards() {
-      const snap = await db.collection("flashcards").get();
-      flashcards = snap.docs.map(doc => doc.data());
-      document.getElementById("loading").style.display = "none";
-      document.getElementById("app").style.display = "block";
-      render();
-    }
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+      let flashcards = [];
 
-    function render() {
-      const container = document.getElementById("flashcards-container");
-      container.innerHTML = "";
-      flashcards.forEach(card => {
-        const div = document.createElement("div");
-        div.className = "card";
-        div.textContent = card.front;
-        div.onclick = () => {
-          div.textContent = div.textContent === card.front ? card.back : card.front;
-        };
-        container.appendChild(div);
+      const chapters = [
+        "Chapter 2 & 3", "Chapter 4 & 5", "Chapter 6", "Chapter 7", "Chapter 8", "Chapter 9",
+        "Chapter 12", "Chapter 13", "Chapter 14", "Chapter 15", "Chapter 16", "Chapter 17 & 18"
+      ];
+
+      const chapterSelect = document.getElementById("chapter");
+      chapters.forEach(ch => {
+        const opt = document.createElement("option");
+        opt.value = ch;
+        opt.textContent = ch;
+        chapterSelect.appendChild(opt);
       });
-    }
 
-    document.getElementById("flashcard-form").addEventListener("submit", async function(e) {
-      e.preventDefault();
-      const front = document.getElementById("front").value.trim();
-      const back = document.getElementById("back").value.trim();
-      const card = { front, back };
-      await db.collection("flashcards").add(card);
-      flashcards.push(card);
-      render();
-      e.target.reset();
-    });
+      function render() {
+        const container = document.getElementById("flashcards-container");
+        container.innerHTML = "";
+        const selected = chapterSelect.value;
+        flashcards.filter(c => c.chapter === selected).forEach(card => {
+          const div = document.createElement("div");
+          div.className = "card";
+          div.textContent = card.front;
+          div.onclick = () => {
+            div.textContent = div.textContent === card.front ? card.back : card.front;
+          };
+          container.appendChild(div);
+        });
+      }
 
-    window.addEventListener("load", () => {
+      async function loadCards() {
+        try {
+          const snapshot = await db.collection("flashcards").get();
+          flashcards = snapshot.docs.map(doc => doc.data());
+          render();
+        } catch (e) {
+          console.error("Firebase load error:", e);
+        }
+      }
+
+      document.getElementById("flashcard-form").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const front = document.getElementById("front").value.trim();
+        const back = document.getElementById("back").value.trim();
+        const chapter = chapterSelect.value;
+        const card = { front, back, chapter, status: "unseen" };
+        try {
+          await db.collection("flashcards").add(card);
+          flashcards.push(card);
+          render();
+          e.target.reset();
+        } catch (e) {
+          console.error("Add card error:", e);
+        }
+      });
+
+      chapterSelect.addEventListener("change", render);
       loadCards();
     });
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
-    }
   </script>
 </body>
 </html>

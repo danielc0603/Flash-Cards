@@ -1,10 +1,3 @@
-
-const loadingIndicator = document.createElement("p");
-loadingIndicator.textContent = "Loading flashcards...";
-loadingIndicator.style.textAlign = "center";
-loadingIndicator.style.marginTop = "20px";
-document.getElementById("flashcards-container").appendChild(loadingIndicator);
-
 const chapters = [
   "Chapter 2 & 3 - The Chemical Context of Life & Water and Life",
   "Chapter 4 & 5 - Carbon and Molecular Diversity & Large Molecules",
@@ -347,49 +340,3 @@ quizBtn.onclick = () => {
 
   nextCard();
 };
-
-
-// Firebase configuration
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBYv_Q4_eRP2_yNo0jd2pq_CSeDxsbUZfE",
-  authDomain: "flashcardapp-cc193.firebaseapp.com",
-  projectId: "flashcardapp-cc193",
-  storageBucket: "flashcardapp-cc193.appspot.com",
-  messagingSenderId: "203925836994",
-  appId: "1:203925836994:web:5998d5765848c98e2dd75b"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-async function syncFlashcardsToFirebase() {
-  const userCards = flashcards || [];
-  for (let i = 0; i < userCards.length; i++) {
-    const card = userCards[i];
-    const id = `${card.chapter}-${card.front}`.replace(/[^a-zA-Z0-9-_]/g, "_");
-    await setDoc(doc(db, "flashcards", id), card);
-  }
-  console.log("Flashcards synced to Firebase.");
-}
-
-async function loadFlashcardsFromFirebase() {
-  const snapshot = await getDocs(collection(db, "flashcards"));
-  const loaded = [];
-  snapshot.forEach(doc => loaded.push(doc.data()));
-  flashcards = loaded;
-  localStorage.setItem("flashcards_v2", JSON.stringify(flashcards));
-  console.log("Flashcards loaded from Firebase.");
-
-  const saved = localStorage.getItem("selected_chapter");
-  if (saved) {
-    chapterSelect.value = saved;
-  }
-  renderFlashcards();
-  if (loadingIndicator) loadingIndicator.remove();
-}
-
-document.addEventListener("DOMContentLoaded", loadFlashcardsFromFirebase);
