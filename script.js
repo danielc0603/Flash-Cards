@@ -153,3 +153,61 @@ document.getElementById("csv-upload").addEventListener("change", function (e) {
   };
   reader.readAsText(file);
 });
+
+
+document.getElementById("select-all").addEventListener("click", () => {
+  const checkboxes = document.querySelectorAll(".flashcard-checkbox");
+  checkboxes.forEach(cb => cb.checked = true);
+});
+
+document.getElementById("delete-selected").addEventListener("click", () => {
+  const confirmed = confirm("Are you sure you want to delete the selected flashcards?");
+  if (!confirmed) return;
+
+  const selectedChapter = chapterSelect.value;
+  const checkboxes = document.querySelectorAll(".flashcard-checkbox:checked");
+  const idsToDelete = Array.from(checkboxes).map(cb => cb.dataset.index);
+
+  flashcards = flashcards.filter((card, index) => {
+    return !(card.chapter === selectedChapter && idsToDelete.includes(index.toString()));
+  });
+
+  localStorage.setItem("flashcards_v2", JSON.stringify(flashcards));
+  renderFlashcards();
+});
+
+function renderFlashcards() {
+  const selectedChapter = chapterSelect.value;
+  const cards = getCardsByChapter(selectedChapter);
+  container.innerHTML = '';
+  let mastered = 0, reviewing = 0;
+
+  cards.forEach((card, i) => {
+    const wrapper = document.createElement('div');
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.textContent = card.front;
+    div.classList.add(card.status || 'unseen');
+    div.onclick = () => {
+      div.classList.toggle('flipped');
+      div.textContent = div.classList.contains('flipped') ? card.back : card.front;
+    };
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'flashcard-checkbox';
+    checkbox.dataset.index = flashcards.indexOf(card);
+
+    wrapper.appendChild(checkbox);
+    wrapper.appendChild(div);
+    container.appendChild(wrapper);
+
+    if (card.status === "mastered") mastered++;
+    if (card.status === "reviewing") reviewing++;
+  });
+
+  const total = cards.length || 1;
+  document.getElementById("mastered-bar").style.width = `${(mastered / total) * 100}%`;
+  document.getElementById("reviewing-bar").style.width = `${(reviewing / total) * 100}%`;
+  document.getElementById("unseen-bar").style.width = `${((cards.length - mastered - reviewing) / total) * 100}%`;
+}
