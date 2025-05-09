@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,44 +11,32 @@
   <div class="container">
     <h1>Biology Flashcards</h1>
 
-    <button id="darkModeToggle">🌙 Toggle Dark Mode</button>
+    <button id="darkModeToggle" class="primary">🌙 Toggle Dark Mode</button>
 
-    <label for="chapter">Select Chapter:</label>
+    <label class="lbl" for="chapter">Select Chapter:</label>
     <select id="chapter"></select>
 
     <form id="flashcard-form">
       <input type="text" id="front" placeholder="Front text" required>
       <input type="text" id="back" placeholder="Back text" required>
-      <button type="submit">➕ Add Card</button>
+      <button type="submit" class="primary">➕ Add Card</button>
     </form>
 
     <div class="upload-section">
-      <label for="csv-upload">📄 Upload CSV Flashcards:</label>
+      <label class="lbl" for="csv-upload">📄 Upload CSV Flashcards:</label>
       <input type="file" id="csv-upload" accept=".csv">
     </div>
 
     <div class="stats">
-      <div>Mastered:
-        <div class="progress-bar">
-          <div id="mastered-bar" class="progress-fill progress-mastered"></div>
-        </div>
-      </div>
-      <div>Reviewing:
-        <div class="progress-bar">
-          <div id="reviewing-bar" class="progress-fill progress-reviewing"></div>
-        </div>
-      </div>
-      <div>Unseen:
-        <div class="progress-bar">
-          <div id="unseen-bar" class="progress-fill progress-unseen"></div>
-        </div>
-      </div>
+      <div>Mastered:<div class="progress-bar"><div id="mastered-bar" class="progress-fill progress-mastered"></div></div></div>
+      <div>Reviewing:<div class="progress-bar"><div id="reviewing-bar" class="progress-fill progress-reviewing"></div></div></div>
+      <div>Unseen:<div class="progress-bar"><div id="unseen-bar" class="progress-fill progress-unseen"></div></div></div>
     </div>
 
     <div class="controls">
-      <button id="start-quiz">📝 Start Quiz</button>
-      <button id="select-all">✅ Select All</button>
-      <button id="delete-selected">🗑️ Delete Selected</button>
+      <button id="start-quiz" class="secondary">📝 Start Quiz</button>
+      <button id="select-all" class="secondary">✅ Select All</button>
+      <button id="delete-selected" class="secondary">🗑️ Delete Selected</button>
     </div>
 
     <div id="flashcards-container"></div>
